@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ident-Ex 02 Nomenclature Decoder</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            max-width: 850px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        /* Search Section Styling */
+        .reverse-search-box {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .reverse-search-box label {
+            font-size: 1.1rem;
+            color: #1565c0;
+            margin: 0;
+            white-space: nowrap;
+        }
+        .reverse-search-box select {
+            border-color: #90caf9;
+            font-weight: bold;
+            color: #1565c0;
+            flex-grow: 1;
+            max-width: 300px;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        select {
+            padding: 0.6rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: #fff;
+        }
+        
+        /* Color Palette for distinct segments */
+        .color-zone { color: #D32F2F; } /* Red */
+        .color-range { color: #388E3C; } /* Green */
+        .color-grip  { color: #1976D2; } /* Blue */
+        .color-fixed{ color: #c4c4c4; } /* Light Grey */
+        .color-alert{ color: #e53935; font-weight: bold; } /* Alert */
+
+        .output-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .model-number {
+            font-size: 1.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            background: #fff;
+            padding: 1rem;
+            border-radius: 6px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            word-break: break-all;
+        }
+        .part-number {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #555;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+        .part-number span {
+            color: #1976D2;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .specs-list {
+            margin: 0;
+            padding-left: 1.2rem;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+        .specs-list strong {
+            display: inline-block;
+            width: 140px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Ident-Ex® 02 Decoder</h1>
+    
+    <div class="reverse-search-box">
+        <label for="reverseSearch" id="prefixLabel">🔍 Article # Search: <strong>70198683 -</strong></label>
+        <select id="reverseSearch">
+            <option value="">-- Select or Build Below --</option>
+        </select>
+    </div>
+    
+    <div class="grid">
+        <div class="form-group">
+            <label for="zone" class="color-zone">Zone Classification</label>
+            <select id="zone">
+                <option value="DZ1" selected>DZ1 - Div 1 / Zone 1</option>
+                <option value="DZ2">DZ2 - Div 2 / Zone 2</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="range" class="color-range">Scanner Range</label>
+            <select id="range">
+                <option value="F" selected>F - Flex Range</option>
+                <option value="L">L - Long Range</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="grip" class="color-grip">Grip & Configuration</label>
+            <select id="grip">
+                <option value="P00-00-.." selected>P00-00-.. - Pocket</option>
+                <option value="G00-00-..">G00-00-.. - Grip</option>
+                <option value="H00-00-..">H00-00-.. - Grip+</option>
+                <option value="S00-00-03">S00-00-03 - Smart Grip S03</option>
+                <option value="S00-00-23">S00-00-23 - Smart Grip S203</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="output-section">
+        <div class="model-number" id="modelOutput"></div>
+        <div class="part-number" id="partNumberOutput"></div>
+        
+        <ul class="specs-list" id="specsOutput">
+        </ul>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const selects = document.querySelectorAll('.grid select');
+    const reverseSearchSelect = document.getElementById('reverseSearch');
+    const modelOutput = document.getElementById('modelOutput');
+    const partNumberOutput = document.getElementById('partNumberOutput');
+    const specsOutput = document.getElementById('specsOutput');
+
+    // Database containing Ident-Ex 02 Configurations
+    const partNumberDB = {
+        "IDENT-EX02-DZ1-AI--F-P00-00-..": "70198683-100000",
+        "IDENT-EX02-DZ1-AI--F-G00-00-..": "70198683-100001",
+        "IDENT-EX02-DZ1-AI--F-H00-00-..": "70198683-100002",
+        "IDENT-EX02-DZ1-AI--L-P00-00-..": "70198683-100003",
+        "IDENT-EX02-DZ1-AI--L-G00-00-..": "70198683-100004",
+        "IDENT-EX02-DZ2-AI--F-P00-00-..": "70198683-100005",
+        "IDENT-EX02-DZ2-AI--F-G00-00-..": "70198683-100006",
+        "IDENT-EX02-DZ2-AI--F-H00-00-..": "70198683-100007",
+        "IDENT-EX02-DZ2-AI--L-P00-00-..": "70198683-100008",
+        "IDENT-EX02-DZ2-AI--L-G00-00-..": "70198683-100009",
+        "IDENT-EX02-DZ1-AI--F-S00-00-03": "70198683-100010",
+        "IDENT-EX02-DZ1-AI--L-S00-00-03": "70198683-100011",
+        "IDENT-EX02-DZ1-AI--F-S00-00-23": "70198683-100012",
+        "IDENT-EX02-DZ1-AI--L-S00-00-23": "70198683-100013",
+        "IDENT-EX02-DZ2-AI--F-S00-00-03": "70198683-100014",
+        "IDENT-EX02-DZ2-AI--L-S00-00-03": "70198683-100015",
+        "IDENT-EX02-DZ2-AI--F-S00-00-23": "70198683-100016",
+        "IDENT-EX02-DZ2-AI--L-S00-00-23": "70198683-100017"
+    };
+
+    let lockZone = false;
+
+    // Extractor for specific segments from the configuration code string
+    function extractFieldFromKey(key, fieldId) {
+        // e.g., "IDENT-EX02-DZ1-AI--F-P00-00-.."
+        const zone = key.substring(11, 14); // DZ1 or DZ2
+        const range = key.substring(19, 20); // F or L
+        const grip = key.substring(21); // Rest of string
+        
+        switch(fieldId) {
+            case 'zone': return zone;
+            case 'range': return range;
+            case 'grip': return grip;
+            default: return "";
+        }
+    }
+
+    // Safely repopulates the Part Number dropdown
+    function populateReverseSearch(keysToInclude) {
+        const currentVal = reverseSearchSelect.value;
+        
+        reverseSearchSelect.innerHTML = '<option value="">-- Select or Build Below --</option>';
+
+        const entries = keysToInclude.map(nom => {
+            const fullPN = partNumberDB[nom];
+            return { nom: nom, suffix: fullPN.replace("70198683-", "") };
+        });
+
+        entries.sort((a, b) => a.suffix.localeCompare(b.suffix));
+
+        entries.forEach(entry => {
+            const newOption = new Option(entry.suffix, entry.nom);
+            reverseSearchSelect.add(newOption);
+        });
+
+        if (keysToInclude.includes(currentVal)) {
+            reverseSearchSelect.value = currentVal;
+        }
+    }
+
+    function updateDecoder() {
+        const zone = document.getElementById('zone');
+        const range = document.getElementById('range');
+        const grip = document.getElementById('grip');
+
+        // Construct visually clean HTML string for UI
+        const modelHTML = `
+            <span class="color-fixed">IDENT-EX02-</span><span class="color-zone">${zone.value}</span><span class="color-fixed">-AI--</span><span class="color-range">${range.value}</span><span class="color-fixed">-</span><span class="color-grip">${grip.value}</span>
+        `;
+        modelOutput.innerHTML = modelHTML;
+
+        // Construct raw theoretical string
+        const rawModelString = `IDENT-EX02-${zone.value}-AI--${range.value}-${grip.value}`;
+        const matchedPartNumber = partNumberDB[rawModelString];
+        
+        let allKeys = Object.keys(partNumberDB);
+        let filteredKeys = allKeys;
+        
+        // Filter by the Zone field if locked from a manual dropdown change
+        if (lockZone) {
+            filteredKeys = allKeys.filter(key => extractFieldFromKey(key, 'zone') === zone.value);
+            if (filteredKeys.length === 0) filteredKeys = allKeys;
+        }
+
+        populateReverseSearch(filteredKeys);
+
+        let notes = "Standard Configuration";
+        if (matchedPartNumber) {
+            partNumberOutput.innerHTML = `Article No: <span>${matchedPartNumber}</span>`;
+            reverseSearchSelect.value = rawModelString; // Sync top box
+            
+            // Apply warning logic from image
+            if (grip.value === 'S00-00-23' && zone.value === 'DZ1') {
+                notes = "<span class='color-alert'>Warning: You can only enter Zone 2/22 DIV 2 areas with an attached Smart-Ex® 203</span>";
+            }
+        } else {
+            partNumberOutput.innerHTML = `Article No: <span>Not Listed / Custom</span>`;
+            reverseSearchSelect.value = ""; 
+        }
+
+        // Construct Specifications List
+        let specsHTML = `<li><strong class="color-fixed">Base Model:</strong> Ident-Ex® 02</li>`;
+        specsHTML += `<li><strong class="color-zone">Zone:</strong> ${zone.options[zone.selectedIndex].text.split(' - ')[1]}</li>`;
+        specsHTML += `<li><strong class="color-fixed">Connectivity:</strong> Base (AI)</li>`;
+        specsHTML += `<li><strong class="color-range">Range:</strong> ${range.options[range.selectedIndex].text.split(' - ')[1]}</li>`;
+        specsHTML += `<li><strong class="color-grip">Grip:</strong> ${grip.options[grip.selectedIndex].text.split(' - ')[1]}</li>`;
+        specsHTML += `<li><strong class="color-fixed">Notes:</strong> ${notes}</li>`;
+        
+        specsOutput.innerHTML = specsHTML;
+    }
+
+    // Attach event listeners to the grid dropdowns
+    selects.forEach(select => {
+        select.addEventListener('change', (e) => {
+            if (e.target.id === 'zone') {
+                lockZone = true; 
+            }
+            updateDecoder();
+        });
+    });
+
+    // Handle Top Search Selection
+    reverseSearchSelect.addEventListener('change', (e) => {
+        const selectedNom = e.target.value;
+        if (!selectedNom) {
+            lockZone = false;
+            updateDecoder();
+            return; 
+        }
+
+        document.getElementById('zone').value  = extractFieldFromKey(selectedNom, 'zone'); 
+        document.getElementById('range').value = extractFieldFromKey(selectedNom, 'range'); 
+        document.getElementById('grip').value  = extractFieldFromKey(selectedNom, 'grip'); 
+
+        lockZone = true;
+        updateDecoder();
+    });
+
+    // Run setup on load
+    updateDecoder();
+});
+</script>
+
+</body>
+</html>
