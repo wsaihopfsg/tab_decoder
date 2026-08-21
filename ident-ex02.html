@@ -115,13 +115,25 @@
         }
         .specs-list {
             margin: 0;
-            padding-left: 1.2rem;
+            padding-left: 1.5rem;
             line-height: 1.8;
             font-size: 1.05rem;
         }
-        .specs-list strong {
-            display: inline-block;
-            width: 140px;
+        .specs-list li {
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Layout fix to align wrapping text perfectly with its corresponding block */
+        .spec-row {
+            display: inline-flex;
+            align-items: flex-start;
+            width: 100%;
+        }
+        .spec-row strong {
+            flex: 0 0 140px;
+        }
+        .spec-val {
+            flex: 1;
         }
     </style>
 </head>
@@ -285,13 +297,13 @@ document.addEventListener('DOMContentLoaded', () => {
             reverseSearchSelect.value = ""; 
         }
 
-        // Construct Specifications List
-        let specsHTML = `<li><strong class="color-fixed">Base Model:</strong> Ident-Ex® 02</li>`;
-        specsHTML += `<li><strong class="color-zone">Zone:</strong> ${zone.options[zone.selectedIndex].text.split(' - ')[1]}</li>`;
-        specsHTML += `<li><strong class="color-fixed">Connectivity:</strong> Base (AI)</li>`;
-        specsHTML += `<li><strong class="color-range">Range:</strong> ${range.options[range.selectedIndex].text.split(' - ')[1]}</li>`;
-        specsHTML += `<li><strong class="color-grip">Grip:</strong> ${grip.options[grip.selectedIndex].text.split(' - ')[1]}</li>`;
-        specsHTML += `<li><strong class="color-fixed">Notes:</strong> ${notes}</li>`;
+        // Construct Specifications List utilizing the flexbox rows for perfect wrapping
+        let specsHTML = `<li><div class="spec-row"><strong class="color-fixed">Base Model:</strong> <span class="spec-val">Ident-Ex® 02</span></div></li>`;
+        specsHTML += `<li><div class="spec-row"><strong class="color-zone">Zone:</strong> <span class="spec-val">${zone.options[zone.selectedIndex].text.split(' - ')[1]}</span></div></li>`;
+        specsHTML += `<li><div class="spec-row"><strong class="color-fixed">Connectivity:</strong> <span class="spec-val">Base (AI)</span></div></li>`;
+        specsHTML += `<li><div class="spec-row"><strong class="color-range">Range:</strong> <span class="spec-val">${range.options[range.selectedIndex].text.split(' - ')[1]}</span></div></li>`;
+        specsHTML += `<li><div class="spec-row"><strong class="color-grip">Grip:</strong> <span class="spec-val">${grip.options[grip.selectedIndex].text.split(' - ')[1]}</span></div></li>`;
+        specsHTML += `<li><div class="spec-row"><strong class="color-fixed">Notes:</strong> <span class="spec-val">${notes}</span></div></li>`;
         
         specsOutput.innerHTML = specsHTML;
     }
