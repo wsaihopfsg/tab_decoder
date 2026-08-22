@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ident-Ex 02 Nomenclature Decoder</title>
+    <title>Ident-R / Ident-Ex 02 Decoder</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -140,7 +140,7 @@
 <body>
 
 <div class="container">
-    <h1>Ident-Ex® 02 Decoder</h1>
+    <h1>Ident-R / Ident-Ex 02 Decoder</h1>
     
     <div class="reverse-search-box">
         <label for="reverseSearch" id="prefixLabel">🔍 Article # Search: <strong>70198683 -</strong></label>
@@ -155,6 +155,7 @@
             <select id="zone">
                 <option value="DZ1" selected>DZ1 - Div 1 / Zone 1</option>
                 <option value="DZ2">DZ2 - Div 2 / Zone 2</option>
+                <option value="RGD">RGD - Rugged</option>
             </select>
         </div>
 
@@ -195,8 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const partNumberOutput = document.getElementById('partNumberOutput');
     const specsOutput = document.getElementById('specsOutput');
 
-    // Database containing Ident-Ex 02 Configurations
+    // Database containing Ident-Ex 02 and Ident-R Configurations
     const partNumberDB = {
+        // Ident-Ex 02 (DZ1 / DZ2)
         "IDENT-EX02-DZ1-AI--F-P00-00-..": "70198683-100000",
         "IDENT-EX02-DZ1-AI--F-G00-00-..": "70198683-100001",
         "IDENT-EX02-DZ1-AI--F-H00-00-..": "70198683-100002",
@@ -214,17 +216,36 @@ document.addEventListener('DOMContentLoaded', () => {
         "IDENT-EX02-DZ2-AI--F-S00-00-03": "70198683-100014",
         "IDENT-EX02-DZ2-AI--L-S00-00-03": "70198683-100015",
         "IDENT-EX02-DZ2-AI--F-S00-00-23": "70198683-100016",
-        "IDENT-EX02-DZ2-AI--L-S00-00-23": "70198683-100017"
+        "IDENT-EX02-DZ2-AI--L-S00-00-23": "70198683-100017",
+        
+        // Ident-R (RGD)
+        "IDENT-R 02-RGD-EUR-F-P00-00-..": "70198683-100018",
+        "IDENT-R 02-RGD-EUR-F-G00-00-..": "70198683-100019",
+        "IDENT-R 02-RGD-EUR-F-S00-00-03": "70198683-100020",
+        "IDENT-R 02-RGD-EUR-F-S00-00-23": "70198683-100021",
+        "IDENT-R 02-RGD-EUR-L-P00-00-..": "70198683-100022",
+        "IDENT-R 02-RGD-EUR-L-G00-00-..": "70198683-100023",
+        "IDENT-R 02-RGD-EUR-L-S00-00-03": "70198683-100024",
+        "IDENT-R 02-RGD-EUR-L-S00-00-23": "70198683-100025"
     };
 
     let lockZone = false;
 
     // Extractor for specific segments from the configuration code string
     function extractFieldFromKey(key, fieldId) {
-        // e.g., "IDENT-EX02-DZ1-AI--F-P00-00-.."
-        const zone = key.substring(11, 14); // DZ1 or DZ2
-        const range = key.substring(19, 20); // F or L
-        const grip = key.substring(21); // Rest of string
+        let zone, range, grip;
+        
+        if (key.startsWith("IDENT-R")) {
+            // e.g., "IDENT-R 02-RGD-EUR-F-P00-00-.."
+            zone = "RGD";
+            range = key.substring(19, 20); // F or L
+            grip = key.substring(21); // Rest of string
+        } else {
+            // e.g., "IDENT-EX02-DZ1-AI--F-P00-00-.."
+            zone = key.substring(11, 14); // DZ1 or DZ2
+            range = key.substring(19, 20); // F or L
+            grip = key.substring(21); // Rest of string
+        }
         
         switch(fieldId) {
             case 'zone': return zone;
@@ -262,14 +283,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const range = document.getElementById('range');
         const grip = document.getElementById('grip');
 
+        // Dynamically hide/disable the H00-00-.. (Grip+) option if Rugged is selected
+        Array.from(grip.options).forEach(option => {
+            if (option.value === 'H00-00-..') {
+                if (zone.value === 'RGD') {
+                    option.hidden = true;
+                    option.disabled = true;
+                    // Reset to a default selection if the user previously had it selected
+                    if (grip.value === 'H00-00-..') {
+                        grip.value = 'P00-00-..';
+                    }
+                } else {
+                    option.hidden = false;
+                    option.disabled = false;
+                }
+            }
+        });
+
+        let baseModelStr = "";
+        let midStr = "";
+        let baseModelDisplay = "";
+        let midDisplay = "";
+
+        // Determine prefixes and mid-strings based on Rugged vs HazLoc
+        if (zone.value === "RGD") {
+            baseModelStr = "IDENT-R 02-";
+            midStr = "-EUR-";
+            baseModelDisplay = "Ident-R 02";
+            midDisplay = "EUR";
+        } else {
+            baseModelStr = "IDENT-EX02-";
+            midStr = "-AI--";
+            baseModelDisplay = "Ident-Ex® 02";
+            midDisplay = "Base (AI)";
+        }
+
         // Construct visually clean HTML string for UI
         const modelHTML = `
-            <span class="color-fixed">IDENT-EX02-</span><span class="color-zone">${zone.value}</span><span class="color-fixed">-AI--</span><span class="color-range">${range.value}</span><span class="color-fixed">-</span><span class="color-grip">${grip.value}</span>
+            <span class="color-fixed">${baseModelStr}</span><span class="color-zone">${zone.value}</span><span class="color-fixed">${midStr}</span><span class="color-range">${range.value}</span><span class="color-fixed">-</span><span class="color-grip">${grip.value}</span>
         `;
         modelOutput.innerHTML = modelHTML;
 
         // Construct raw theoretical string
-        const rawModelString = `IDENT-EX02-${zone.value}-AI--${range.value}-${grip.value}`;
+        const rawModelString = `${baseModelStr}${zone.value}${midStr}${range.value}-${grip.value}`;
         const matchedPartNumber = partNumberDB[rawModelString];
         
         let allKeys = Object.keys(partNumberDB);
@@ -288,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
             partNumberOutput.innerHTML = `Article No: <span>${matchedPartNumber}</span>`;
             reverseSearchSelect.value = rawModelString; // Sync top box
             
-            // Apply warning logic from image
+            // Apply warning logic from image (Only applicable to DZ1)
             if (grip.value === 'S00-00-23' && zone.value === 'DZ1') {
                 notes = "<span class='color-alert'>Warning: You can only enter Zone 2/22 DIV 2 areas with an attached Smart-Ex® 203</span>";
             }
@@ -298,9 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Construct Specifications List utilizing the flexbox rows for perfect wrapping
-        let specsHTML = `<li><div class="spec-row"><strong class="color-fixed">Base Model:</strong> <span class="spec-val">Ident-Ex® 02</span></div></li>`;
+        let specsHTML = `<li><div class="spec-row"><strong class="color-fixed">Base Model:</strong> <span class="spec-val">${baseModelDisplay}</span></div></li>`;
         specsHTML += `<li><div class="spec-row"><strong class="color-zone">Zone:</strong> <span class="spec-val">${zone.options[zone.selectedIndex].text.split(' - ')[1]}</span></div></li>`;
-        specsHTML += `<li><div class="spec-row"><strong class="color-fixed">Connectivity:</strong> <span class="spec-val">Base (AI)</span></div></li>`;
+        specsHTML += `<li><div class="spec-row"><strong class="color-fixed">Connectivity:</strong> <span class="spec-val">${midDisplay}</span></div></li>`;
         specsHTML += `<li><div class="spec-row"><strong class="color-range">Range:</strong> <span class="spec-val">${range.options[range.selectedIndex].text.split(' - ')[1]}</span></div></li>`;
         specsHTML += `<li><div class="spec-row"><strong class="color-grip">Grip:</strong> <span class="spec-val">${grip.options[grip.selectedIndex].text.split(' - ')[1]}</span></div></li>`;
         specsHTML += `<li><div class="spec-row"><strong class="color-fixed">Notes:</strong> <span class="spec-val">${notes}</span></div></li>`;
@@ -329,7 +385,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('zone').value  = extractFieldFromKey(selectedNom, 'zone'); 
         document.getElementById('range').value = extractFieldFromKey(selectedNom, 'range'); 
-        document.getElementById('grip').value  = extractFieldFromKey(selectedNom, 'grip'); 
+        
+        // Ensure dropdown dynamically respects hidden logic for reverse lookups as well
+        if(extractFieldFromKey(selectedNom, 'zone') === 'RGD' && extractFieldFromKey(selectedNom, 'grip') === 'H00-00-..') {
+            document.getElementById('grip').value = 'P00-00-..';
+        } else {
+            document.getElementById('grip').value  = extractFieldFromKey(selectedNom, 'grip'); 
+        }
 
         lockZone = true;
         updateDecoder();
